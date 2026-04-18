@@ -299,3 +299,7 @@ if __name__ == "__main__":
 
     # Fase 7: Correlaciones
     analizar_correlaciones(df_limpio, "price", "output")
+
+    # EJERCICIO 2: INFERENCIA Y MODELO DE REGRESIÓN LINEAL
+    from ejercicio2_inferencia import regresion_ejercicio2
+    regresion_ejercicio2(df_limpio, target='price', carpeta_out='output')

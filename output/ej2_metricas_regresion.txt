@@ -1,0 +1,5 @@
+MÉTRICAS DEL MODELO DE REGRESIÓN LINEAL
+========================================
+MAE (Error Absoluto Medio): 71.0791
+RMSE (Raíz del Error Cuadrático Medio): 197.7370
+R2 (Coeficiente de Determinación): 0.1162
