@@ -1,0 +1,5 @@
+ANÁLISIS DE RESIDUOS
+====================
+Media: 0.1271
+p-valor Jarque-Bera: 0.5766
+p-valor ADF (Estacionariedad): 0.0000

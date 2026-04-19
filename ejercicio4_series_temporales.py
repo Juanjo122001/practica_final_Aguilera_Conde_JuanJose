@@ -39,6 +39,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import os
+from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from scipy.stats import jarque_bera, norm
 
 # Crear carpeta de salida si no existe
 os.makedirs("output", exist_ok=True)
@@ -115,7 +119,17 @@ def visualizar_serie(serie):
     - Guarda con plt.savefig("output/ej4_serie_original.png", dpi=150, bbox_inches='tight')
     """
     # TODO: Implementa la visualización de la serie
-    pass
+    fig, ax = plt.subplots(figsize=(14, 4))
+    ax.plot(serie.index, serie.values, color='blue', linewidth=1)
+    ax.set_title("Serie Temporal Sintética (2018-2023)", fontsize=14)
+    ax.set_xlabel("Fecha")
+    ax.set_ylabel("Valor")
+    ax.grid(True, linestyle='--', alpha=0.3)
+
+    plt.savefig("output/ej4_serie_original.png", dpi=150, bbox_inches='tight')
+    plt.close()
+
+    
 
 
 # =============================================================================
@@ -148,9 +162,15 @@ def descomponer_serie(serie):
     # resultado = seasonal_decompose(...)
     # fig = resultado.plot()
     # ...
-    pass
-
-
+    resultado = seasonal_decompose(serie, model='additive', period=365)
+    
+    fig = resultado.plot()
+    fig.set_size_inches(12, 10)
+    plt.suptitle("Descomposición de la Serie Temporal", fontsize=16)
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.savefig("output/ej4_descomposicion.png", dpi=150)
+    plt.close()
+    return resultado
 # =============================================================================
 # TAREA 3 — Análisis del residuo (ruido)
 # =============================================================================
@@ -187,30 +207,62 @@ def analizar_residuo(residuo):
         from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
     """
     # TODO: Limpia el residuo (elimina NaN al inicio/fin)
-    residuo_limpio = None  # ← residuo.dropna()
+    residuo_limpio = residuo.dropna()  # ← residuo.dropna()
 
     # TODO: Calcula estadísticos básicos
-    media    = None
-    std      = None
-    asimetria = None
-    curtosis  = None
+    media    = residuo_limpio.mean()
+    std      = residuo_limpio.std()
+    asimetria = residuo_limpio.skew()
+    curtosis  = residuo_limpio.kurtosis()
 
 
     # TODO: Test de estacionariedad (ADF)
     # from statsmodels.tsa.stattools import adfuller
-    # resultado_adf = adfuller(residuo_limpio)
-    # p_adf = resultado_adf[1]
+    resultado_adf = adfuller(residuo_limpio)
+    p_adf = resultado_adf[1]
 
     # TODO: Gráfico ACF y PACF del residuo → output/ej4_acf_pacf.png
-    pass
+    fig_corr, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+    plot_acf(residuo_limpio, ax=ax1, lags=40, title="Autocorrelación (ACF)")
+    plot_pacf(residuo_limpio, ax=ax2, lags=40, title="Autocorrelación Parcial (PACF)")
+    plt.savefig("output/ej4_acf_pacf.png", dpi=150, bbox_inches='tight')
+    plt.close()
 
     # TODO: Histograma del residuo con curva normal superpuesta
     # → output/ej4_histograma_ruido.png
     # Pista: usa scipy.stats.norm.pdf para la curva teórica
-    pass
-
+    plt.hist(residuo_limpio, bins=40, density=True, color='lightgray', 
+             edgecolor='white', label='Residuos (frecuencia relativa)')
+    xmin, xmax = plt.xlim()
+    x = np.linspace(xmin, xmax, 100)
+    # Calculamos la PDF (Función de Densidad de Probabilidad) teórica
+    # usando la media y std calculadas antes
+    p = norm.pdf(x, media, std)
+    
+    # 3. Superponer la curva en el gráfico
+    plt.plot(x, p, 'r', linewidth=2, label=f'Curva Normal Teórica\n(μ={media:.2f}, σ={std:.2f})')
+    
+    # Formato del gráfico
+    plt.title('Distribución de los Residuos vs. Distribución Normal', fontsize=13)
+    plt.xlabel('Valor del Residuo')
+    plt.ylabel('Densidad')
+    plt.legend()
+    plt.grid(axis='y', alpha=0.3)
+    
+    
     # TODO: Guardar estadísticos en output/ej4_analisis.txt
-    pass
+    # Guardar resultado
+    plt.savefig("output/ej4_histograma_ruido.png", dpi=150, bbox_inches='tight')
+    plt.close()
+
+    jb_stat, jb_p = jarque_bera(residuo_limpio)
+    p_adf = adfuller(residuo_limpio)[1]
+    
+    with open("output/ej4_analisis.txt", "w", encoding="utf-8") as f:
+        f.write("ANÁLISIS DE RESIDUOS\n" + "="*20 + "\n")
+        f.write(f"Media: {media:.4f}\n")
+        f.write(f"p-valor Jarque-Bera: {jb_p:.4f}\n")
+        f.write(f"p-valor ADF (Estacionariedad): {p_adf:.4f}\n")
 
 
 # =============================================================================
